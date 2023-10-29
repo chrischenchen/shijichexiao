@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>商品价格计算器</title>
+    <style>
+        .product {
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        span {
+            display: inline-block;
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>商品价格计算器</h1>
+    <div id="productContainer">
+    </div>
+    <div>
+        <p>总价格: <span id="totalPrice">0.00</span>元</p>
+    </div>
+    <button id="resetButton">全部取消</button>
+    <button id="undoButton">撤销上一步</button>
+    <div id="selectedProducts">
+        <h2>已选中商品</h2>
+        <ul></ul>
+    </div>
+
+    <script>
+        const products = [
+            { name: "青酱盐牛角", price: 13 },
+            { name: "掘金盐牛角", price: 11 },
+            { name: "芝士碱水球", price: 24 },
+            { name: "混合碱水球", price: 18 },
+            { name: "燕麦碱水球", price: 26 },
+            { name: "原味碱水球", price: 28 },
+            { name: "抹茶米面包", price: 16 },
+            { name: "原味米面包", price: 10 },
+            { name: "百香果米面包", price: 15 },
+            { name: "巴斯克布里欧修", price: 16 },
+            { name: "柠檬乳酪布里欧修", price: 10 },
+            { name: "咸黄杨莳萝布里欧修", price: 10 },
+            { name: "抹茶碱水棒", price: 10 },
+            { name: "芋泥碱水棒", price: 12 },
+            { name: "香草可露丽", price: 13 },
+            { name: "红茶司康", price: 10 },
+            { name: "法芙娜巧克力可颂", price: 18 },
+            { name: "可颂", price: 13 },
+            { name: "蓝莓塔塔", price: 16 },
+            { name: "香草苹果颂", price: 18 },
+            { name: "蒜香法棍", price: 16 },
+            { name: "德肠长法棍", price: 22 },
+            { name: "卡仕达猫爪", price: 6 },
+            { name: "日式红豆包", price: 6 },
+            { name: "黑芝麻乳酪贝果", price: 16 },
+            { name: "原味贝果", price: 8 },
+            { name: "双椒牛肉芝士夏巴塔", price: 18 },
+            { name: "双椒夏巴塔", price: 9 },
+            { name: "桂花肉桂卷", price: 13 },
+            { name: "苹果巧克力肉桂卷", price: 16 },
+            { name: "小僵尸", price: 16 }
+        ];
+
+        const productContainer = document.getElementById('productContainer');
+        const totalPriceElement = document.getElementById('totalPrice');
+        const resetButton = document.getElementById('resetButton');
+        const undoButton = document.getElementById('undoButton');
+        const selectedProductsList = document.querySelector('#selectedProducts ul');
+        let totalPrice = 0.00;
+        const selectedProducts = [];
+        let actionHistory = [];
+
+        function updateSelectedProductList() {
+            selectedProductsList.innerHTML = '';
+            selectedProducts.forEach(product => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${product.name} - ${product.price.toFixed(2)}元 x ${product.count}`;
+                listItem.setAttribute('data-name', product.name);
+                selectedProductsList.appendChild(listItem);
+            });
+        }
+
+        function updateTotalPrice() {
+            totalPriceElement.textContent = totalPrice.toFixed(2);
+        }
+
+        products.forEach(product => {
+            const productElement = document.createElement('span');
+            productElement.classList.add('product');
+            productElement.setAttribute('data-price', product.price);
+            productElement.textContent = `${product.name} - ${product.price.toFixed(2)}`;
+
+            productElement.addEventListener('click', () => {
+                const price = parseFloat(productElement.getAttribute('data-price'));
+
+                const selectedProductIndex = selectedProducts.findIndex(p => p.name === product.name);
+                if (selectedProductIndex !== -1) {
+                    selectedProducts[selectedProductIndex].count++;
+                } else {
+                    selectedProducts.push({ name: product.name, price, count: 1 });
+                }
+
+                totalPrice += price;
+                updateTotalPrice();
+                updateSelectedProductList();
+
+                actionHistory.push({ type: 'add', name: product.name });
+            });
+
+            productContainer.appendChild(productElement);
+        });
+
+        resetButton.addEventListener('click', () => {
+            totalPrice = 0.00;
+            updateTotalPrice();
+            selectedProducts.length = 0;
+            updateSelectedProductList();
+            actionHistory.length = 0;
+        });
+
+        undoButton.addEventListener('click', () => {
+            if (actionHistory.length > 0) {
+                const lastAction = actionHistory.pop();
+                const productName = lastAction.name;
+
+                if (lastAction.type === 'add') {
+                    const selectedProductIndex = selectedProducts.findIndex(p => p.name === productName);
+                    if (selectedProductIndex !== -1) {
+                        const selectedProduct = selectedProducts[selectedProductIndex];
+                        selectedProduct.count--;
+                        if (selectedProduct.count === 0) {
+                            selectedProducts.splice(selectedProductIndex, 1);
+                        }
+                        totalPrice -= selectedProduct.price;
+                        updateTotalPrice();
+                        updateSelectedProductList();
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
